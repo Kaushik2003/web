@@ -45,11 +45,39 @@ function PreviewTab({ sandbox, activeTab, expandedId }: { sandbox: Sandbox; acti
   useEffect(() => {
     if (activeTab !== 'preview' || expandedId !== sandbox.id) return;
     const url = buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain });
-    const ctrl = new AbortController();
-    fetch(url, { method: 'GET', mode: 'no-cors', signal: ctrl.signal })
-      .then(() => setPreviewState('ready'))
-      .catch(() => setPreviewState('unavailable'));
-    return () => ctrl.abort();
+
+    // Probe preview by loading a small image (favicon) — works around CORS
+    // and is more reliable for detecting whether the host resolves and serves content.
+    let cancelled = false;
+    const img = new Image();
+    const pingUrl = url.replace(/\/$/, '') + '/favicon.ico';
+    const timeout = Number(process.env.NEXT_PUBLIC_PREVIEW_PROBE_TIMEOUT || 4000); // ms
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      img.src = '';
+      setPreviewState('unavailable');
+    }, timeout);
+
+    img.onload = () => {
+      if (cancelled) return;
+      clearTimeout(timer);
+      setPreviewState('ready');
+    };
+    img.onerror = () => {
+      if (cancelled) return;
+      clearTimeout(timer);
+      setPreviewState('unavailable');
+    };
+
+    // Start probe
+    img.src = pingUrl;
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [activeTab, expandedId, sandbox.id, sandbox.preview_domain]);
 
   return (
