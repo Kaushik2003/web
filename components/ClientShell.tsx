@@ -35,15 +35,18 @@ export default function ClientShell({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(true);
   const pathname = usePathname();
 
-  const [isIframe, setIsIframe] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.self !== window.top;
-    }
-    return false;
-  });
+  // Avoid hydration mismatch: detect iframe only on client after mount.
+  const [isIframe, setIsIframe] = useState(false);
+  const [iframeChecked, setIframeChecked] = useState(false);
 
   useEffect(() => {
-    if (isIframe) return;
+    const iframe = typeof window !== 'undefined' && window.self !== window.top;
+    setIsIframe(iframe);
+    setIframeChecked(true);
+  }, []);
+
+  useEffect(() => {
+    if (!iframeChecked || isIframe) return;
 
     const stored = localStorage.getItem('stacyvm-theme');
     if (stored === 'light') {
@@ -53,9 +56,11 @@ export default function ClientShell({ children }: { children: ReactNode }) {
       setDarkMode(true);
       document.documentElement.classList.add('dark');
     }
-  }, []);
+  }, [iframeChecked, isIframe]);
 
-  if (isIframe) {
+  // Only replace the full UI with the preview-unavailable message after
+  // we've checked iframe status on the client to avoid hydration mismatches.
+  if (iframeChecked && isIframe) {
     return (
       <div className="flex h-screen items-center justify-center bg-navy-950 text-gray-500 p-6 text-center">
         <div>

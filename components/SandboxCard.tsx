@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { Sandbox } from '../api/client';
+import buildPreviewUrl from '../lib/preview';
 
 interface SandboxCardProps {
   sandbox: Sandbox;
@@ -219,7 +220,7 @@ export default function SandboxCard({
             {sandbox.status === 'running' && (
               <span className="flex items-center gap-1 ml-auto">
                 <a
-                  href={`http://3000-${sandbox.id}.${sandbox.preview_domain || 'localhost'}`}
+                  href={buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/30 text-xs font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"

@@ -35,6 +35,7 @@ import Terminal from '../../components/Terminal';
 import FileBrowser from '../../components/FileBrowser';
 import LogViewer from '../../components/LogViewer';
 import { SandboxCardSkeleton } from '../../components/Skeleton';
+import buildPreviewUrl from '../../lib/preview';
 
 type DetailTab = 'terminal' | 'files' | 'console' | 'preview';
 
@@ -43,7 +44,7 @@ function PreviewTab({ sandbox, activeTab, expandedId }: { sandbox: Sandbox; acti
 
   useEffect(() => {
     if (activeTab !== 'preview' || expandedId !== sandbox.id) return;
-    const url = `http://3000-${sandbox.id}.${sandbox.preview_domain || 'localhost'}`;
+    const url = buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain });
     const ctrl = new AbortController();
     fetch(url, { method: 'GET', mode: 'no-cors', signal: ctrl.signal })
       .then(() => setPreviewState('ready'))
@@ -59,11 +60,11 @@ function PreviewTab({ sandbox, activeTab, expandedId }: { sandbox: Sandbox; acti
           <span>Live Preview</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500 bg-navy-800 px-2 py-1 rounded select-all">
-            {`http://3000-${sandbox.id}.${sandbox.preview_domain || 'localhost'}`}
+            <span className="text-xs font-mono text-gray-500 bg-navy-800 px-2 py-1 rounded select-all">
+            {buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain })}
           </span>
           <a
-            href={`http://3000-${sandbox.id}.${sandbox.preview_domain || 'localhost'}`}
+            href={buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain })}
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-500 hover:text-gray-300 transition-colors"
@@ -90,7 +91,7 @@ function PreviewTab({ sandbox, activeTab, expandedId }: { sandbox: Sandbox; acti
         {previewState === 'ready' && (
           <iframe
             key={sandbox.id}
-            src={`http://3000-${sandbox.id}.${sandbox.preview_domain || 'localhost'}`}
+            src={buildPreviewUrl({ id: sandbox.id, preview_domain: sandbox.preview_domain })}
             className="absolute inset-0 w-full h-full border-none bg-white"
             title={`Live Preview for ${sandbox.id}`}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
