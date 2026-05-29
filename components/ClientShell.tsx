@@ -33,17 +33,13 @@ const navItems = [
 export default function ClientShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [isIframe, setIsIframe] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const pathname = usePathname();
 
-  const [isIframe, setIsIframe] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.self !== window.top;
-    }
-    return false;
-  });
-
   useEffect(() => {
-    if (isIframe) return;
+    setIsIframe(window.self !== window.top);
+    setIsHydrated(true);
 
     const stored = localStorage.getItem('stacyvm-theme');
     if (stored === 'light') {
@@ -54,6 +50,10 @@ export default function ClientShell({ children }: { children: ReactNode }) {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  if (!isHydrated) {
+    return null;
+  }
 
   if (isIframe) {
     return (
