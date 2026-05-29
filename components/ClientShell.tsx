@@ -38,7 +38,11 @@ export default function ClientShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    setIsIframe(window.self !== window.top);
+    // Only show iframe error for Wails contexts, not for v0 preview embeds
+    const isWailsContext = window.self !== window.top && 
+      !window.location.hostname.includes('vusercontent.net') &&
+      (window as any).wails !== undefined;
+    setIsIframe(isWailsContext);
     setIsHydrated(true);
 
     const stored = localStorage.getItem('stacyvm-theme');
